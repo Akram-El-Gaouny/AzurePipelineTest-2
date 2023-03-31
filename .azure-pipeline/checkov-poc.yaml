@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+    - main
+    
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: run-checkov@0
+  inputs:
+    path: 'tf'
+  env:
+    TEST_PATH: "Checkov-Root-Report.xml"
+
+# - bash: | 
+#     pip3 install checkov
+#   displayName: "Install Checkov"
+#   name: 'install_checkov'
+  
+# - bash: | 
+#     rm Checkov-Root-Report.xml
+#     checkov -d tf --skip-check CKV_DOCKER_* -o junitxml > Checkov-Root-Report.xml 
+#   displayName: 'Checkov'
+
+# - bash: | 
+#     pip3 install pandas openpyxl
+#     python3 scripts/match.py
+#   displayName: Edit Checkov Names
+#   condition: succeededOrFailed()
+#   env:
+#     TEST_PATH: 'Checkov-Root-Report.xml'
+
+  # Publish test results for root module
+- task: PublishTestResults@2
+  displayName: Publish Checkov Root Test Results
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: 'Checkov-Root-Report.xml'
+    searchFolder: './'
+    mergeTestResults: false
+    testRunTitle: Checkov Root Scan
+    failTaskOnFailedTests: false
+    publishRunAttachments: true
